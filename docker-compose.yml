@@ -1,0 +1,62 @@
+services:
+  node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}-node
+    working_dir: /application
+    volumes:
+      - ./../:/application
+    tty: true
+    stdin_open: true
+    networks:
+      - internal
+    ports:
+      - '${PORT:-3000}:3000'
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # - redis
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${PROJECT_NAME}-postgres
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT}:5432"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: ${PROJECT_NAME}-redis
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     REDIS_HOST: ${REDIS_HOST}
+  #     REDIS_PORT: ${REDIS_PORT}
+  #   ports:
+  #     - "${REDIS_PORT}:6379"
+
+volumes:
+  pgdata:
+    driver: local
+networks:
+  internal:
+    driver: bridge
