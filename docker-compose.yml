@@ -7,8 +7,6 @@ services:
     working_dir: /application
     volumes:
       - ./../:/application
-    tty: true
-    stdin_open: true
     networks:
       - internal
     ports:
@@ -16,31 +14,26 @@ services:
     env_file:
       - .env
     depends_on:
-      postgres:
-        condition: service_healthy
+      - pgsql
       # - redis
 
-  postgres:
-    image: postgres:15-alpine
-    container_name: ${PROJECT_NAME}-postgres
-    restart: unless-stopped
-    ports:
-      - "${DB_PORT}:5432"
+  pgsql:
+    image: postgres:13
+    container_name: ${PROJECT_NAME}-pgsql
     env_file:
       - .env
     environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGPASSWORD: '${DB_PASSWORD}'
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_USER: '${DB_USERNAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./sourcefiles/pgsql:/tmp
+      - 'pg-data:/var/lib/postgresql/data'
+    ports:
+      - '${DB_PORT}:5432'
     networks:
       - internal
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # redis:
   #   image: redis:7-alpine
@@ -55,7 +48,7 @@ services:
   #     - "${REDIS_PORT}:6379"
 
 volumes:
-  pgdata:
+  pg-data:
     driver: local
 networks:
   internal:
