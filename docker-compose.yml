@@ -11,14 +11,14 @@ services:
       - internal
     ports:
       - '${PORT:-3000}:3000'
+      - '5555:5555'
     env_file:
       - .env
     depends_on:
       - pgsql
+      - redis
     stdin_open: true
-    tty:
-      true
-      # - redis
+    tty: true
 
   pgsql:
     image: postgres:13
@@ -49,6 +49,8 @@ services:
       REDIS_PORT: ${REDIS_PORT}
     ports:
       - '${REDIS_PORT}:6379'
+    networks:
+      - internal
 
 volumes:
   pg-data:
