@@ -16,7 +16,8 @@ services:
     depends_on:
       - pgsql
     stdin_open: true
-    tty: true
+    tty:
+      true
       # - redis
 
   pgsql:
@@ -37,17 +38,17 @@ services:
     networks:
       - internal
 
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: ${PROJECT_NAME}-redis
-  #   restart: always
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     REDIS_HOST: ${REDIS_HOST}
-  #     REDIS_PORT: ${REDIS_PORT}
-  #   ports:
-  #     - "${REDIS_PORT}:6379"
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME}-redis
+    restart: always
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+    ports:
+      - '${REDIS_PORT}:6379'
 
 volumes:
   pg-data:
